@@ -2,9 +2,11 @@
 import requests
 import json
 import matplotlib.pyplot as plt
+import matplotlib.text
 import pandas as pd
 from os.path import exists
 from pathlib import Path
+import mplcursors
 import numpy as np
 
 p = Path(__file__).parent.absolute()
@@ -49,7 +51,7 @@ fields_block2 = {
     'offset':'100'
 }
 
-albumPlotMap = {'Taylor Swift':['*','#c09a79'], 'Speak Now':['D','#904275'], 'Fearless':['.','#886633'],  'Red':['x','#962c2e'], '1989':['P','#4b4952'], 'reputation':['h','b'], 'Lover':['v','#ffcee0'], 'folklore':['8','#5c5c5c'], 'evermore':['p','#68AC41']}
+albumPlotMap = {'Taylor Swift':['*','#c09a79'], 'Speak Now':['D','#904275'], 'Fearless':['.','#886633'],  'Red':['x','#962c2e'], '1989':['P','#4b4952'], 'reputation':['h','b'], 'Lover':['v','#ffcee0'], 'folklore':['8','#5c5c5c'], 'evermore':['p','#68AC41'], 'Midnights':['1','#C28068']}
 
 playlistId_tim      = '0LgZ0fq02lPnape3Y2lBIL' #source ranking
 playlist_id_SANDBOX = '1bfrHHGVc5gbJyLmfnK7t2' #sandbox playlist
@@ -80,12 +82,12 @@ class songRanking:
             self.featuresSet = True
             return
         print("Refused to set the same features object twice: ", self.title)
-        input()
+        #input()
     
     def addRanking(self, rank, rankSource):
         if rankSource in self.ranking:
-            print("Refused to add the same person's ranking twice: ", rankSource, self.track)
-            input()
+            print("Refused to add the same person's ranking twice: ", rankSource, self.title)
+            #input()
             return
         self.ranking[rankSource] = rank
         self.numSources = self.numSources + 1 
@@ -101,7 +103,7 @@ class songRanking:
                     self.differenceMap[source1+source2] = rank1 - rank2
 
 def getPlaylistData(masterRankingsDic, advancedFeaturesFromFile, playlistId, rankSource):
-
+    print("Get from ", rankSource)
     r = requests.get(BASE_URL + 'playlists/' + playlistId + '/tracks', headers=headers,params=fields_block1)
     r = r.json()
     rank = 0
@@ -127,7 +129,6 @@ def getPlaylistData(masterRankingsDic, advancedFeaturesFromFile, playlistId, ran
     for trackCont in r['items']:
         album = trackCont['track']['album']['name']
         track = trackCont['track']['name']
-        
         uri = trackCont['track']['uri']
         popularity = trackCont['track']['popularity']
 
@@ -168,6 +169,8 @@ def temp_clonePlaylist(masterRankingsDic):
         sleep(0.01)
 
 def plot2d(masterRankingsDic):
+    print("plot2d depreciated. use pandas idiot")
+    return
     ratings1 = []
     ratings2 = []
     
@@ -252,50 +255,100 @@ def accumulatedRanking(df,rankers):
     print(df_AvSorted.head(20))
     print(df_AvSorted.tail(20))
     
-    
     return df_averaged
-
+    
+#handle this? df[df['album'] not in albumPlotMap]
 def plotPan(df,rankers):
     for i,person1 in enumerate(rankers):
         if i < (len(rankers) - 1):
             for j,person2 in enumerate(rankers):
                 if j > i:
-                    axis = None
+                    #axis = None
                     for album in albumPlotMap:
+                        axis = None
                         df_albumFilter = df[df["album"] == album]
-                        axis = df_albumFilter.plot(x=person1,y=person2,kind='scatter',color=albumPlotMap[album][1],marker=albumPlotMap[album][0], ax=axis,label=album)
-                    
-                    axis = plt.plot(range(0,len(df.index)),range(0,len(df.index)),color='black')
-                    plt.legend()
-    plt.show()
-    
-    #handle this? df[df['album'] not in albumPlotMap]
-
-
+                        axis = df_albumFilter.plot(
+                            x=person1,
+                            y=person2,
+                            kind='scatter',
+                            color=albumPlotMap[album][1],
+                            marker=albumPlotMap[album][0],
+                            ax=axis,
+                            label=album
+                        )
+                        matplotlib.text.Annotation(df_albumFilter.title, xy=(df_albumFilter.tim, df_albumFilter.kay))
+                        #mplcursors.cursor(df_albumFilter.title,annotation_kwargs=")
+                        mplcursors.cursor(axis)
+                        axis = plt.plot(range(0,len(df.index)),range(0,len(df.index)),color='black')
+                        plt.legend()
+                        #plt.canvas.mpl_connect('motion_notify_event', on_plot_hover) 
+                    plt.show()
+    #plt.show()
 
 songRankings = {}
 
 haveAdvancedFeatures = exists(str(p) + "//advFeatures.csv")
+#haveAdvancedFeatures = False
+#inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL'}
+#inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'inOrder':'6wrTcAyc3n9tXuiWroLGIu'}
+inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'kay':'3GnsHYtgqTb8wACbhJK5TZ'}
+#inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'inOrder':'6wrTcAyc3n9tXuiWroLGIu', 'inOrder2':'6wrTcAyc3n9tXuiWroLGIu'}
 
-inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL'}
-inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'inOrder':'6wrTcAyc3n9tXuiWroLGIu'}
-inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'inOrder':'6wrTcAyc3n9tXuiWroLGIu', 'inOrder2':'6wrTcAyc3n9tXuiWroLGIu'}
-
+print("Getting Playlist Data")
 [getPlaylistData(songRankings, haveAdvancedFeatures, inputMap[person], person) for person in inputMap]
-
+print("Saving Advanced Features")
 df_advFeatures = saveAdvancedFeatures(songRankings, haveAdvancedFeatures)
-
+print("Recombobulating...")
 df_all = repairSins(df_advFeatures, songRankings, inputMap.keys())
 
-df_folklore = df_all[df_all["album"] == "folklore"]
-df_evermore = df_all[df_all["album"] == "evermore"]
-print(df_folklore,df_evermore)
-#print("folklore ",df_folklore["Unnamed: 0"].mean() / len(df_folklore["Unnamed: 0"]) )
+#normalZ = []
+#unNormalZ = []
+
+#for album in albumPlotMap:
+    #df_sub = df_all[df_all["album"] == album]
+    #print(album,df_sub["Unnamed: 0"].mean()) 
+    #print(album,df_sub["Unnamed: 0"].mean() / len(df_sub["Unnamed: 0"]) )
+    #normalZ.append((df_sub["Unnamed: 0"].mean() / len(df_sub["Unnamed: 0"]),album))
+    #unNormalZ.append((df_sub["Unnamed: 0"].mean(),album))
+    
+#normalT = []
+#unNormalT = []
+#for album in albumPlotMap:
+ #   df_sub = df_all[df_all["album"] == album]
+    #print(album,df_sub["tim"].mean() / len(df_sub["tim"]) )
+    #normalT.append((df_sub["tim"].mean() / len(df_sub["tim"]),album))
+  #  unNormalT.append((df_sub["tim"].mean(),album))
+
+#print("\n\n")
+#unNormalT.sort()
+#for score,album in unNormalT:
+#    print(round(score,2), "\t" + album )
+
+#df_folklore = df_all[df_all["album"] == "folklore"]
+#df_evermore = df_all[df_all["album"] == "evermore"]
+#df_midnights = df_all[df_all["album"] == "Midnights"]
+#df_red = df_all[df_all["album"] == "Red"]
+#print(df_red)
+#print(df_all)
 #print("evermore ",df_evermore["Unnamed: 0"].mean() / len(df_evermore["Unnamed: 0"]))
 
-#corr(df_all, inputMap.keys())
-#accumulatedRanking(df_all, inputMap.keys())
-#plotPan(df_all,inputMap.keys())
+
+def on_plot_hover(event):
+    # Iterating over each data member plotted
+    for curve in plot.get_lines():
+        # Searching which data member corresponds to current mouse position
+        if curve.contains(event)[0]:
+            print("over %s" % curve.get_gid())
+            
+#fig.canvas.mpl_connect('motion_notify_event', on_plot_hover)           
+#plt.show()
+
+print("Plotting...")
+print(df_all)
+corr(df_all, inputMap.keys())
+accumulatedRanking(df_all, inputMap.keys())
+
+plotPan(df_all,inputMap.keys())
 
 #comparison of large differences in rating between people?
 
