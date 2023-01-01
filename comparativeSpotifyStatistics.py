@@ -276,21 +276,39 @@ def plotPan(df,rankers):
                             ax=axis,
                             label=album
                         )
-                        matplotlib.text.Annotation(df_albumFilter.title, xy=(df_albumFilter.tim, df_albumFilter.kay))
+                        #matplotlib.text.Annotation(df_albumFilter.title, xy=(df_albumFilter.tim, df_albumFilter.kay))
                         #mplcursors.cursor(df_albumFilter.title,annotation_kwargs=")
-                        mplcursors.cursor(axis)
+                        cursor = mplcursors.cursor(axis)
+                        #cursor.connect("add", lambda sel: sel.annotation.set_text(df_albumFilter.title[sel.index]))
+                        #cursor.connect("add", lambda sel: sel.annotation.set_text(sel.target.__dict__))
+                        #cursor.connect("add", 
+                        #                lambda sel: sel.annotation.set_text(
+                        #                df_albumFilter[int( sel.target.data[0])].title)
+                        #               )
+                        #cursor.connect("add", lambda sel: sel.annotation.set_text(getTitleInLambda(df_albumFilter,0)))
+                        cursor.connect("add", lambda sel: sel.annotation.set_text(getTitleInLambda(df_albumFilter,sel.target.data[0])))
                         axis = plt.plot(range(0,len(df.index)),range(0,len(df.index)),color='black')
                         plt.legend()
                         #plt.canvas.mpl_connect('motion_notify_event', on_plot_hover) 
                     plt.show()
     #plt.show()
 
+def getTitleInLambda(df,index):
+    #return ("test" + str(index))
+    try:
+        #print(df)
+        #print("index" + str(index))
+        #result = df.iloc[int(index)].title
+        result = df[df["tim"] == int(index)]
+        #print()
+        return result["title"].item()
+    except IndexError:
+        print('index error')
+        return "errored"
+
 songRankings = {}
 
 haveAdvancedFeatures = exists(str(p) + "//advFeatures.csv")
-#haveAdvancedFeatures = False
-#inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL'}
-#inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'inOrder':'6wrTcAyc3n9tXuiWroLGIu'}
 inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'kay':'3GnsHYtgqTb8wACbhJK5TZ'}
 #inputMap = {"tim":'0LgZ0fq02lPnape3Y2lBIL', 'inOrder':'6wrTcAyc3n9tXuiWroLGIu', 'inOrder2':'6wrTcAyc3n9tXuiWroLGIu'}
 
@@ -301,53 +319,12 @@ df_advFeatures = saveAdvancedFeatures(songRankings, haveAdvancedFeatures)
 print("Recombobulating...")
 df_all = repairSins(df_advFeatures, songRankings, inputMap.keys())
 
-#normalZ = []
-#unNormalZ = []
-
-#for album in albumPlotMap:
-    #df_sub = df_all[df_all["album"] == album]
-    #print(album,df_sub["Unnamed: 0"].mean()) 
-    #print(album,df_sub["Unnamed: 0"].mean() / len(df_sub["Unnamed: 0"]) )
-    #normalZ.append((df_sub["Unnamed: 0"].mean() / len(df_sub["Unnamed: 0"]),album))
-    #unNormalZ.append((df_sub["Unnamed: 0"].mean(),album))
-    
-#normalT = []
-#unNormalT = []
-#for album in albumPlotMap:
- #   df_sub = df_all[df_all["album"] == album]
-    #print(album,df_sub["tim"].mean() / len(df_sub["tim"]) )
-    #normalT.append((df_sub["tim"].mean() / len(df_sub["tim"]),album))
-  #  unNormalT.append((df_sub["tim"].mean(),album))
-
-#print("\n\n")
-#unNormalT.sort()
-#for score,album in unNormalT:
-#    print(round(score,2), "\t" + album )
-
-#df_folklore = df_all[df_all["album"] == "folklore"]
-#df_evermore = df_all[df_all["album"] == "evermore"]
-#df_midnights = df_all[df_all["album"] == "Midnights"]
-#df_red = df_all[df_all["album"] == "Red"]
-#print(df_red)
-#print(df_all)
-#print("evermore ",df_evermore["Unnamed: 0"].mean() / len(df_evermore["Unnamed: 0"]))
-
-
-def on_plot_hover(event):
-    # Iterating over each data member plotted
-    for curve in plot.get_lines():
-        # Searching which data member corresponds to current mouse position
-        if curve.contains(event)[0]:
-            print("over %s" % curve.get_gid())
-            
-#fig.canvas.mpl_connect('motion_notify_event', on_plot_hover)           
-#plt.show()
-
 print("Plotting...")
-print(df_all)
-corr(df_all, inputMap.keys())
-accumulatedRanking(df_all, inputMap.keys())
+#print(df_all)
+#corr(df_all, inputMap.keys())
+#accumulatedRanking(df_all, inputMap.keys())
 
+#print(df_all.iloc[int(98)].title)
 plotPan(df_all,inputMap.keys())
 
 #comparison of large differences in rating between people?
