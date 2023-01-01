@@ -263,9 +263,9 @@ def plotPan(df,rankers):
         if i < (len(rankers) - 1):
             for j,person2 in enumerate(rankers):
                 if j > i:
-                    #axis = None
+                    axis = None
                     for album in albumPlotMap:
-                        axis = None
+                        #axis = None
                         df_albumFilter = df[df["album"] == album]
                         axis = df_albumFilter.plot(
                             x=person1,
@@ -278,7 +278,6 @@ def plotPan(df,rankers):
                         )
                         #matplotlib.text.Annotation(df_albumFilter.title, xy=(df_albumFilter.tim, df_albumFilter.kay))
                         #mplcursors.cursor(df_albumFilter.title,annotation_kwargs=")
-                        cursor = mplcursors.cursor(axis)
                         #cursor.connect("add", lambda sel: sel.annotation.set_text(df_albumFilter.title[sel.index]))
                         #cursor.connect("add", lambda sel: sel.annotation.set_text(sel.target.__dict__))
                         #cursor.connect("add", 
@@ -286,12 +285,15 @@ def plotPan(df,rankers):
                         #                df_albumFilter[int( sel.target.data[0])].title)
                         #               )
                         #cursor.connect("add", lambda sel: sel.annotation.set_text(getTitleInLambda(df_albumFilter,0)))
-                        cursor.connect("add", lambda sel: sel.annotation.set_text(getTitleInLambda(df_albumFilter,sel.target.data[0])))
-                        axis = plt.plot(range(0,len(df.index)),range(0,len(df.index)),color='black')
-                        plt.legend()
+
+                        
                         #plt.canvas.mpl_connect('motion_notify_event', on_plot_hover) 
-                    plt.show()
-    #plt.show()
+                    #plt.show()
+    cursor = mplcursors.cursor(axis)
+    cursor.connect("add", lambda sel: sel.annotation.set_text(getTitleInLambda(df,sel.target.data[0])))
+    axis = plt.plot(range(0,len(df.index)),range(0,len(df.index)),color='black')
+    plt.legend()
+    plt.show()
 
 def getTitleInLambda(df,index):
     #return ("test" + str(index))
@@ -321,7 +323,7 @@ df_all = repairSins(df_advFeatures, songRankings, inputMap.keys())
 
 print("Plotting...")
 #print(df_all)
-#corr(df_all, inputMap.keys())
+corr(df_all, inputMap.keys())
 #accumulatedRanking(df_all, inputMap.keys())
 
 #print(df_all.iloc[int(98)].title)
